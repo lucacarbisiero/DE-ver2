@@ -1,0 +1,1531 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="theme-color" content="#111111">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagnosi Energetica - Rilievi</title>
+<link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Font + Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- SheetJS (Excel export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#fff;
+      --text:#111;
+      --muted:#666;
+      --border:#e6e6e6;
+      --card:#fff;
+      --shadow: 0 6px 18px rgba(0,0,0,.06);
+      --accent:#16a34a; 
+      --danger:#b42318;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height:1.25;
+    }
+    .app{
+      max-width: 900px;
+      margin: 0 auto;
+      padding-bottom: 200px;
+    }
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar{
+      padding:14px 16px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .title .badge{
+      width:38px;height:38px;border:1px solid var(--border);
+      border-radius:12px;display:grid;place-items:center;
+      box-shadow: var(--shadow);
+    }
+    .title h1{
+      font-size:16px;
+      margin:0;
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 62vw;
+    }
+    .subtitle{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 62vw;
+    }
+    .status{
+      text-align:right;
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      box-shadow: var(--shadow);
+    }
+    main{ padding: 14px 16px; }
+    .grid{ display:grid; gap:12px; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:14px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    @media(min-width:700px){
+      .row.cols-2{ grid-template-columns: 1fr 1fr; }
+      .row.cols-3{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+    label{
+      font-size:12px;
+      font-weight:600;
+      color:var(--muted);
+      display:block;
+      margin: 0 0 6px 0;
+    }
+    input, select, textarea{
+      width:100%;
+      padding: 11px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      font: inherit;
+      font-size:14px;
+      outline:none;
+      background:#fff;
+    }
+    textarea{ min-height: 90px; resize: vertical; }
+    input:focus, select:focus, textarea:focus{
+      border-color:#c9c9c9;
+      box-shadow: 0 0 0 4px rgba(0,0,0,.05);
+    }
+    .checks{
+      display:grid;
+      gap:10px;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .check{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--border);
+      padding: 10px 12px;
+      border-radius:12px;
+      background:#fff;
+    }
+    .check input{ width:auto; }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    button{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      padding: 7px 12px;
+      border-radius:10px;
+      font: inherit;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: var(--shadow);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    button.primary{
+      background: var(--accent);
+      color:#fff;
+      border-color: var(--accent);
+    }
+    button.danger{
+      background:#fff;
+      color: var(--danger);
+      border-color: #f2c6c2;
+    }
+    button.ghost{
+      box-shadow:none;
+      border-color:transparent;
+      background:transparent;
+      color: var(--muted);
+      padding: 8px 10px;
+      font-weight:700;
+    }
+    button:active{ transform: translateY(1px); }
+
+    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border); }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 680px;
+      background:#fff;
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      font-size:13px;
+      vertical-align:top;
+    }
+    th{ color:var(--muted); font-size:12px; font-weight:800; background:#fafafa; position:sticky; top:0; }
+    tr:last-child td{ border-bottom:none; }
+    .t-actions{ white-space:nowrap; }
+    .tiny{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .project-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      box-shadow: var(--shadow);
+    }
+    .project-item .meta{ min-width:0; }
+    .project-item .name{
+      font-weight:800;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 56vw;
+    }
+    .project-item .details{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 56vw;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+      border-top:1px solid var(--border);
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      z-index:20;
+    }
+    .nav-inner{
+      max-width: 900px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:8px;
+    }
+    .nav-btn{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding: 10px 8px;
+      background:#f8f9fb;
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      font-weight:800;
+      font-size:11px;
+      color: #6b7280;
+    }
+    .nav-btn.active{
+      background:#16a34a;
+      color: #fff;
+      border-color:#16a34a;
+    }
+
+    .hidden{ display:none !important; }
+    .toast{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:92px;
+      background:#111;
+      color:#fff;
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease;
+      z-index:30;
+    }
+    .toast.show{ opacity:1; }
+    /* Toggle bottom nav */
+.nav-toggle{
+  position:fixed;
+  right:15px;
+  bottom:110px; /* sopra al menu */
+  z-index:25;
+  background: var(--accent);
+  color:#fff;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:50%;
+  width:46px;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: var(--shadow);
+}
+
+.bottom-nav{
+  transition: transform .28s ease;
+}
+
+.bottom-nav.is-hidden{
+  transform: translateY(110%);
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="topbar">
+        <div class="title">
+          <div class="badge"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div style="min-width:0">
+            <h1 id="appTitle">Diagnosi Energetica</h1>
+            <div class="subtitle" id="appSubtitle">Home</div>
+          </div>
+        </div>
+        <div class="status">
+          <div class="pill" id="savePill"><i class="fa-regular fa-floppy-disk"></i> <span id="saveStatus">Nessun progetto</span></div>
+          <div class="tiny" id="activeProjectTiny"></div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section id="view-home" class="grid">
+        <div class="card">
+          <h2><i class="fa-solid fa-house"></i> Progetti</h2>
+
+          <div class="actions">
+            <button class="primary" id="btnNewProject"><i class="fa-solid fa-plus"></i> Nuovo Progetto</button>
+
+            <!-- NEW: Save on demand -->
+            <button id="btnSaveNow" title="Salva subito in memoria (LocalStorage)"><i class="fa-solid fa-floppy-disk"></i> Salva ora</button>
+
+            <!-- NEW: Import JSON -->
+            <button id="btnImportProjectJSON" title="Importa un progetto da file JSON"><i class="fa-solid fa-file-import"></i> Importa progetto (JSON)</button>
+            <input id="fileImportJSON" class="hidden" type="file" accept=".json,application/json" />
+
+            <button id="btnExportProjectJSON" title="Esporta progetto selezionato in JSON"><i class="fa-solid fa-file-code"></i> Esporta progetto (JSON)</button>
+            <button id="btnExportAllExcel" title="Esporta tutto in Excel multi-sheet"><i class="fa-solid fa-file-excel"></i> Esporta tutto (Excel)</button>
+          </div>
+
+          <div style="margin-top:12px" class="tiny">
+            I progetti restano salvati sul browser (LocalStorage). Export JSON/Excel per backup o invio.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><i class="fa-solid fa-folder-open"></i> Elenco progetti salvati</h2>
+          <div id="projectsList" class="grid"></div>
+          <div id="noProjects" class="tiny">Nessun progetto ancora. Crea un nuovo progetto.</div>
+        </div>
+
+        <div class="card hidden" id="newProjectCard">
+          <h2><i class="fa-solid fa-pen-to-square"></i> Crea nuovo progetto</h2>
+
+          <div class="row cols-2">
+            <div>
+              <label>Ragione Sociale</label>
+              <input id="p_ragioneSociale" type="text" placeholder="Es. ABC S.r.l." />
+            </div>
+            <div>
+              <label>Indirizzo sito</label>
+              <input id="p_indirizzo" type="text" placeholder="Via, Città" />
+            </div>
+          </div>
+
+          <div class="row cols-3">
+            <div>
+              <label>Data sopralluogo</label>
+              <input id="p_data" type="date" />
+            </div>
+            <div>
+              <label>Meteo</label>
+              <select id="p_meteo">
+                <option value="">—</option>
+                <option>sereno</option>
+                <option>coperto</option>
+                <option>pioggia</option>
+                <option>neve</option>
+              </select>
+            </div>
+            <div>
+              <label>Temperatura esterna (°C)</label>
+              <input id="p_tempEsterna" type="number" inputmode="decimal" step="0.1" placeholder="Es. 12.5" />
+            </div>
+          </div>
+
+          <div class="row cols-2">
+            <div>
+              <label>Nome referente_1</label>
+              <input id="p_ref1_nome" type="text" placeholder="Nome e cognome" />
+            </div>
+            <div>
+              <label>Qualifica referente_1</label>
+              <input id="p_ref1_qualifica" type="text" placeholder="Es. Resp. Manutenzione" />
+            </div>
+          </div>
+
+          <div class="row cols-2">
+            <div>
+              <label>Nome referente_2</label>
+              <input id="p_ref2_nome" type="text" placeholder="Nome e cognome" />
+            </div>
+            <div>
+              <label>Qualifica referente_2</label>
+              <input id="p_ref2_qualifica" type="text" placeholder="Es. HSE" />
+            </div>
+          </div>
+
+          <div class="row cols-2">
+            <div>
+              <label>Superficie totale (mq)</label>
+              <input id="p_superficie" type="number" inputmode="numeric" step="1" placeholder="Es. 1200" />
+            </div>
+            <div>
+              <label>Check documentazione</label>
+              <div class="checks">
+                <div class="check"><input id="p_chk_planimetria" type="checkbox" /> <span>Planimetria</span></div>
+                <div class="check"><input id="p_chk_consumi" type="checkbox" /> <span>Consumi</span></div>
+                <div class="check"><input id="p_chk_ciclo" type="checkbox" /> <span>Ciclo prod.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Note</label>
+              <textarea id="p_note" placeholder="Note libere..."></textarea>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="btnSaveNewProject"><i class="fa-solid fa-floppy-disk"></i> Salva progetto</button>
+            <button class="ghost" id="btnCancelNewProject"><i class="fa-solid fa-xmark"></i> Annulla</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEZIONE TEMPLATE -->
+      <section id="view-section" class="grid hidden">
+        <div class="card">
+          <h2 id="sectionTitle"><i class="fa-solid fa-list-check"></i> Sezione</h2>
+
+          <div id="sectionForm" class="grid"></div>
+
+          <div class="actions">
+            <button class="primary" id="btnAddOrUpdate"><i class="fa-solid fa-check"></i> Conferma</button>
+            <button class="ghost hidden" id="btnCancelEdit"><i class="fa-solid fa-xmark"></i> Annulla modifica</button>
+            <button id="btnExportSectionExcel"><i class="fa-solid fa-file-excel"></i> Esporta Excel (sezione)</button>
+          </div>
+          <div class="tiny" id="sectionHint"></div>
+        </div>
+
+        <div class="card">
+          <h2><i class="fa-solid fa-table"></i> Record</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr id="tableHeadRow"></tr></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="tiny" style="margin-top:10px">Suggerimento: usa “Duplica” per inserire velocemente record simili.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bottom nav -->
+  <button id="btnToggleNav" class="nav-toggle"><i class="fa-solid fa-bars"></i></button>
+  <div class="bottom-nav">
+    <div class="nav-inner">
+      <button class="nav-btn active" data-route="home"><i class="fa-solid fa-house"></i><span>Home</span></button>
+      <button class="nav-btn" data-route="impianti"><i class="fa-solid fa-fire-burner"></i><span>Impianti</span></button>
+      <button class="nav-btn" data-route="illuminazione"><i class="fa-solid fa-lightbulb"></i><span>Luci</span></button>
+      <button class="nav-btn" data-route="termografia"><i class="fa-solid fa-camera"></i><span>Termografia</span></button>
+      <button class="nav-btn" data-route="airleak"><i class="fa-solid fa-wind"></i><span>Air Leak</span></button>
+      <button class="nav-btn" data-route="gruppifrigoriferi"><i class="fa-solid fa-snowflake"></i><span>Gruppi Frigo</span></button>
+      <button class="nav-btn" data-route="compressori"><i class="fa-solid fa-compress"></i><span>Compressori</span></button>
+      <button class="nav-btn" data-route="caricabatterie_muletti"><i class="fa-solid fa-charging-station"></i><span>Muletti</span></button>
+
+
+
+
+    </div>
+    <div class="nav-inner" style="margin-top:8px">
+      <button class="nav-btn" data-route="hvac"><i class="fa-solid fa-fan"></i><span>HVAC</span></button>
+      <button class="nav-btn" data-route="trasparenti"><i class="fa-regular fa-window-maximize"></i><span>Trasparenti</span></button>
+      <button class="nav-btn" data-route="opache"><i class="fa-solid fa-kaaba"></i><span>Opache</span></button>
+      <button class="nav-btn" data-route="info"><i class="fa-solid fa-circle-info"></i><span>Info</span></button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* =========================
+   STORAGE MODEL
+========================= */
+const LS_KEY = "diagenergetica_projects_v1";
+
+function uuid(){
+  return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return { projects: [], activeProjectId: null, lastSavedAt: null };
+    const parsed = JSON.parse(raw);
+    return {
+      projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+      activeProjectId: parsed.activeProjectId ?? null,
+      lastSavedAt: parsed.lastSavedAt ?? null
+    };
+  }catch(e){
+    console.error(e);
+    return { projects: [], activeProjectId: null, lastSavedAt: null };
+  }
+}
+
+function saveState(state){
+  state.lastSavedAt = new Date().toISOString();
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+
+/* Autosave ogni 2 minuti (requisito) */
+const AUTOSAVE_MS = 2 * 60 * 1000;
+
+/* =========================
+   SECTIONS DEFINITIONS
+========================= */
+const SECTIONS = {
+  impianti: {
+    label: "Impianti Termici",
+    icon: "fa-fire-burner",
+    key: "impianti_termici",
+    fields: [
+      { id:"generatore", label:"Generatore", type:"select", options:[
+        "caldaia tradizionale","caldaia a condensazione","pompa di calore aria/aria","pompa di calore aria/acqua",
+        "pompa di calore acqua/acqua","pompa di calore geotermica","caldaia a pellet","caldaia a cippato","altro"
+      ]},
+      { id:"potenza_termica_kwt", label:"Potenza termica [kWt]", type:"number", step:"0.1" },
+      { id:"potenza_elettrica_kwe", label:"Potenza elettrica [kWe]", type:"number", step:"0.1" },
+      { id:"temp_mandata_c", label:"Temperatura mandata (°C)", type:"number", step:"0.1" },
+      { id:"fluido", label:"Fluido termovettore", type:"select", options:["acqua","vapore","olio diatermico","altro"]},
+      { id:"rendimento_cop_eer", label:"Rendimento / COP / EER", type:"number", step:"0.01" },
+      { id:"modello", label:"Modello", type:"text" },
+      { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+      { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+      { id:"note", label:"Note", type:"text" }
+    ]
+  },
+  illuminazione: {
+    label: "Illuminazione",
+    icon: "fa-lightbulb",
+    key: "illuminazione",
+    fields: [
+      { id:"posizione", label:"Posizione", type:"text" },
+      { id:"tipo", label:"Tipo", type:"select", options:["LED","Neon","Vapori di sodio","Vapori di mercurio","Incandescenza","Altro"] },
+      { id:"punti_luce", label:"Punti luce", type:"number", step:"1" },
+      { id:"lampade_per_punto", label:"Lampade per punto luce", type:"number", step:"1" },
+      { id:"potenza_w", label:"Potenza [W]", type:"number", step:"1" },
+      { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+      { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+      { id:"note", label:"Note", type:"text" }
+    ]
+  },
+  termografia: {
+    label: "Termografia",
+    icon: "fa-camera",
+    key: "termografia",
+    fields: [
+      { id:"id_foto", label:"ID foto", type:"number", step:"1" },
+      { id:"reparto", label:"Reparto", type:"text" },
+      { id:"n", label:"n.", type:"number", step:"1" },
+      { id:"tipo", label:"Tipo", type:"select", options:["valvola","flangia","tubo"] },
+      { id:"dn", label:"DN", type:"number", step:"1" },
+      { id:"temp_c", label:"Temperatura (°C)", type:"number", step:"0.1" },
+      { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+      { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+      { id:"note", label:"Note", type:"text" }
+    ]
+  },
+  hvac: {
+    label: "HVAC",
+    icon: "fa-fan",
+    key: "hvac",
+    fields: [
+      { id:"reparto", label:"Reparto", type:"text" },
+      { id:"uta", label:"UTA", type:"text" },
+      { id:"n_motori", label:"n. motori", type:"number", step:"1" },
+      { id:"potenza_motori_kw", label:"Potenza motori (kW)", type:"number", step:"0.1" },
+      { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+      { id:"fattore_carico", label:"Fattore di carico", type:"number", step:"0.01" },
+      { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+      { id:"note", label:"Note", type:"text" }
+    ]
+  },
+  trasparenti: {
+    label: "Chiusure Trasparenti",
+    icon: "fa-window-maximize",
+    key: "chiusure_trasparenti",
+    fields: [
+      { id:"reparto", label:"Reparto", type:"text" },
+      { id:"telaio", label:"Telaio", type:"select", options:["PVC","Alluminio","Legno"] },
+      { id:"spessore_telaio", label:"Spessore telaio", type:"number", step:"0.1" },
+      { id:"vetro", label:"Vetro", type:"select", options:["Singolo","Doppio","Triplo"] },
+      { id:"h_finestra", label:"Altezza finestra", type:"number", step:"0.1" },
+      { id:"w_finestra", label:"Larghezza finestra", type:"number", step:"0.1" },
+      { id:"t_interna_c", label:"T. interna (°C)", type:"number", step:"0.1" },
+      { id:"note", label:"Note", type:"text" }
+    ]
+  },
+  opache: {
+    label: "Chiusure Opache",
+    icon: "fa-kaaba",
+    key: "chiusure_opache",
+    fields: [
+      { id:"reparto", label:"Reparto", type:"text" },
+      { id:"materiale", label:"Materiale", type:"select", options:["Mattone pieno","Laterizio","Blocchetti cementizi","Legno","Lamiera","Altro"] },
+      { id:"spessore_muro", label:"Spessore muro", type:"number", step:"0.1" },
+      { id:"tipo_isolante", label:"Tipo isolante", type:"text" },
+      { id:"spessore_isolante", label:"Spessore isolante", type:"number", step:"0.1" },
+      { id:"h_parete", label:"Altezza parete", type:"number", step:"0.1" },
+      { id:"w_parete", label:"Larghezza parete", type:"number", step:"0.1" },
+      { id:"t_interna_c", label:"T. interna (°C)", type:"number", step:"0.1" },
+      { id:"note", label:"Note", type:"text" }
+    ]
+  },
+airleak: {
+  label: "Air Leak",
+  icon: "fa-wind",
+  key: "air_leak",
+  fields: [
+    { id:"id_leak", label:"ID", type:"number", step:"1" },
+    { id:"reparto", label:"Reparto", type:"text" },
+    { id:"componente", label:"Componente", type:"text" },
+    { id:"db", label:"dB", type:"number", step:"0.1" },
+    { id:"note", label:"Note", type:"text" }
+  ]
+},
+  gruppifrigoriferi: {
+  label: "Gruppi Frigo",
+  icon: "fa-snowflake",
+  key: "gruppi_frigo",
+  fields: [
+    { id:"reparto", label:"Reparto", type:"text" },
+    { id:"modello", label:"Modello", type:"text" },
+    { id:"potenza_frigo_kwf", label:"Potenza frigorifera [kWf]", type:"number", step:"0.1" },
+    { id:"potenza_elettrica_kwe", label:"Potenza elettrica [kWe]", type:"number", step:"0.1" },
+    { id:"cop_eer", label:"COP / EER", type:"number", step:"0.01" },
+    { id:"fluido", label:"Fluido refrigerante", type:"text" },
+    { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+    { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+    { id:"note", label:"Note", type:"text" }
+  ]
+},
+compressori: {
+  label: "Compressori",
+  icon: "fa-compress",
+  key: "compressori",
+  fields: [
+    { id:"reparto", label:"Reparto", type:"text" },
+    { id:"marca_modello", label:"Marca / Modello", type:"text" },
+    { id:"tipo", label:"Tipo compressore", type:"select", options:["vite","pistoni","centrifugo","scroll","altro"] },
+    { id:"potenza_kw", label:"Potenza elettrica [kW]", type:"number", step:"0.1" },
+    { id:"portata_m3min", label:"Portata [m³/min]", type:"number", step:"0.1" },
+    { id:"pressione_bar", label:"Pressione [bar]", type:"number", step:"0.1" },
+    { id:"temperatura_c", label:"Temperatura (°C)", type:"number", step:"0.1" },
+    { id:"evacuazione_calore", label:"Evacuazione calore", type:"select", options:["No","Sì"] },
+    { id:"inverter", label:"Inverter", type:"select", options:["No","Sì"] },
+    { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+    { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+    { id:"note", label:"Note", type:"text" }
+  ]
+},
+caricabatterie_muletti: {
+  label: "Caricabatterie Muletti",
+  icon: "fa-charging-station",
+  key: "caricabatterie_muletti",
+  fields: [
+    { id:"id", label:"ID", type:"number", step:"1" },
+    { id:"reparto", label:"Reparto / Area", type:"text" },
+    { id:"marca_modello", label:"Marca / Modello", type:"text" },
+    { id:"n_postazioni", label:"N° postazioni", type:"number", step:"1" },
+    { id:"tensione_v", label:"Tensione batteria [V]", type:"select", options:["24","36","48","72","80","Altro"] },
+    { id:"corrente_a", label:"Corrente di carica [A]", type:"number", step:"0.1" },
+    { id:"tipo_caricatore", label:"Tipo caricatore", type:"select", options:["Tradizionale/Trafo","HF (alta frequenza)","Altro"] },
+    { id:"giorni", label:"Giorni esercizio", type:"number", step:"1" },
+    { id:"ore", label:"Ore esercizio", type:"number", step:"0.5" },
+    { id:"note", label:"Note", type:"text" }
+  ]
+}
+};
+
+function emptyProject(){
+  return {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    info: {
+      ragioneSociale:"",
+      indirizzo:"",
+      dataSopralluogo:"",
+      referente1_nome:"",
+      referente1_qualifica:"",
+      referente2_nome:"",
+      referente2_qualifica:"",
+      meteo:"",
+      tempEsterna:null,
+      superficieMq:null,
+      planimetria:false,
+      consumi:false,
+      cicloProduttivo:false,
+      note:""
+    },
+    data: {
+      impianti_termici: [],
+      illuminazione: [],
+      termografia: [],
+      hvac: [],
+      chiusure_trasparenti: [],
+      chiusure_opache: [],
+      air_leak: [],
+      gruppi_frigo: [],
+      compressori: [],
+      caricabatterie_muletti: []
+    }
+  };
+}
+
+
+function getActiveProject(){
+  return state.projects.find(p => p.id === state.activeProjectId) || null;
+}
+function touchProject(p){
+  p.updatedAt = new Date().toISOString();
+}
+
+/* =========================
+   UI HELPERS
+========================= */
+const el = (id) => document.getElementById(id);
+
+function toast(msg){
+  const t = el("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1400);
+}
+
+function renderSaveStatus(){
+  const p = getActiveProject();
+  if(!p){
+    el("saveStatus").textContent = "Nessun progetto";
+    el("activeProjectTiny").textContent = "";
+    return;
+  }
+  el("saveStatus").textContent = `Ultimo salvataggio: ${state.lastSavedAt ? new Date(state.lastSavedAt).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) : "—"}`;
+  el("activeProjectTiny").textContent = `${p.info.ragioneSociale || "Progetto"} • ${p.info.indirizzo || ""}`.trim();
+}
+
+function setRoute(route){
+  document.querySelectorAll(".nav-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.route === route);
+  });
+
+  const home = el("view-home");
+  const sec = el("view-section");
+
+  if(route === "home"){
+    home.classList.remove("hidden");
+    sec.classList.add("hidden");
+    el("appSubtitle").textContent = "Home";
+    renderHome();
+    return;
+  }
+  if(route === "info"){
+    openInfoView();
+    return;
+  }
+
+  const p = getActiveProject();
+  if(!p){
+    toast("Seleziona o crea un progetto prima.");
+    setRoute("home");
+    return;
+  }
+    if(!SECTIONS[route]){
+    toast("Sezione non configurata: " + route);
+    return;
+  }
+  openSection(route);
+}
+
+/* =========================
+   HOME
+========================= */
+function renderHome(){
+  renderSaveStatus();
+
+  const list = el("projectsList");
+  list.innerHTML = "";
+
+  const no = el("noProjects");
+  no.classList.toggle("hidden", state.projects.length > 0);
+
+  state.projects
+    .slice()
+    .sort((a,b)=> (b.updatedAt || "").localeCompare(a.updatedAt || ""))
+    .forEach(p=>{
+      const item = document.createElement("div");
+      item.className = "project-item";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = p.info.ragioneSociale || "Senza nome";
+      const details = document.createElement("div");
+      details.className = "details";
+      const dt = p.info.dataSopralluogo ? new Date(p.info.dataSopralluogo).toLocaleDateString() : "data —";
+      details.textContent = `${dt} • ${p.info.indirizzo || "indirizzo —"}`;
+      meta.appendChild(name);
+      meta.appendChild(details);
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "8px";
+      actions.style.alignItems = "center";
+
+      const btnOpen = document.createElement("button");
+      btnOpen.className = "primary";
+      btnOpen.innerHTML = `<i class="fa-solid fa-folder-open"></i> Apri`;
+      btnOpen.onclick = ()=>{
+        state.activeProjectId = p.id;
+        persist();
+        toast("Progetto selezionato");
+      };
+
+      const btnDel = document.createElement("button");
+      btnDel.className = "danger";
+      btnDel.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+      btnDel.title = "Elimina progetto";
+      btnDel.onclick = ()=>{
+        if(!confirm("Eliminare il progetto? (Operazione irreversibile)")) return;
+        state.projects = state.projects.filter(x=>x.id!==p.id);
+        if(state.activeProjectId === p.id) state.activeProjectId = null;
+        persist();
+        renderHome();
+        toast("Progetto eliminato");
+      };
+
+      actions.appendChild(btnOpen);
+      actions.appendChild(btnDel);
+
+      item.appendChild(meta);
+      item.appendChild(actions);
+      list.appendChild(item);
+    });
+}
+
+function openNewProjectForm(show){
+  el("newProjectCard").classList.toggle("hidden", !show);
+  if(show){
+    el("p_data").value = new Date().toISOString().slice(0,10);
+  }
+}
+
+function readNewProjectForm(){
+  const p = emptyProject();
+  p.info.ragioneSociale = el("p_ragioneSociale").value.trim();
+  p.info.indirizzo = el("p_indirizzo").value.trim();
+  p.info.dataSopralluogo = el("p_data").value || "";
+  p.info.referente1_nome = el("p_ref1_nome").value.trim();
+  p.info.referente1_qualifica = el("p_ref1_qualifica").value.trim();
+  p.info.referente2_nome = el("p_ref2_nome").value.trim();
+  p.info.referente2_qualifica = el("p_ref2_qualifica").value.trim();
+  p.info.meteo = el("p_meteo").value;
+  p.info.tempEsterna = el("p_tempEsterna").value === "" ? null : Number(el("p_tempEsterna").value);
+  p.info.superficieMq = el("p_superficie").value === "" ? null : Number(el("p_superficie").value);
+  p.info.planimetria = el("p_chk_planimetria").checked;
+  p.info.consumi = el("p_chk_consumi").checked;
+  p.info.cicloProduttivo = el("p_chk_ciclo").checked;
+  p.info.note = el("p_note").value.trim();
+  return p;
+}
+
+/* =========================
+   INFO VIEW
+========================= */
+function openInfoView(){
+  const p = getActiveProject();
+  if(!p){
+    toast("Seleziona o crea un progetto prima.");
+    setRoute("home");
+    return;
+  }
+
+  el("view-home").classList.add("hidden");
+  el("view-section").classList.remove("hidden");
+
+  el("appSubtitle").textContent = "Info Progetto";
+  el("sectionTitle").innerHTML = `<i class="fa-solid fa-circle-info"></i> Info Progetto`;
+  el("sectionHint").textContent = "Modifica qui i dati generali del progetto.";
+
+  const form = el("sectionForm");
+  form.innerHTML = "";
+
+  const fields = [
+    ["Ragione Sociale","ragioneSociale","text"],
+    ["Indirizzo sito","indirizzo","text"],
+    ["Data sopralluogo","dataSopralluogo","date"],
+    ["Nome referente_1","referente1_nome","text"],
+    ["Qualifica referente_1","referente1_qualifica","text"],
+    ["Nome referente_2","referente2_nome","text"],
+    ["Qualifica referente_2","referente2_qualifica","text"],
+    ["Meteo","meteo","select",["","sereno","coperto","pioggia","neve"]],
+    ["Temperatura esterna (°C)","tempEsterna","number"],
+    ["Superficie totale (mq)","superficieMq","number"],
+    ["Planimetria","planimetria","checkbox"],
+    ["Consumi","consumi","checkbox"],
+    ["Ciclo produttivo","cicloProduttivo","checkbox"],
+    ["Note","note","textarea"],
+  ];
+
+  function inputBlock(fieldDef, dataObj){
+    const [labelText, key, type, options] = fieldDef;
+    const wrap = document.createElement("div");
+    const lab = document.createElement("label");
+    lab.textContent = labelText;
+    wrap.appendChild(lab);
+
+    let input;
+    if(type === "select"){
+      input = document.createElement("select");
+      (options || []).forEach(opt=>{
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt === "" ? "—" : opt;
+        input.appendChild(o);
+      });
+      input.value = dataObj[key] ?? "";
+    }else if(type === "textarea"){
+      input = document.createElement("textarea");
+      input.value = dataObj[key] ?? "";
+    }else if(type === "checkbox"){
+      const box = document.createElement("div");
+      box.className = "check";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!dataObj[key];
+      cb.dataset.infokey = key;
+      const sp = document.createElement("span");
+      sp.textContent = "Sì";
+      box.appendChild(cb);
+      box.appendChild(sp);
+      wrap.appendChild(box);
+      return wrap;
+    }else{
+      input = document.createElement("input");
+      input.type = (type === "date") ? "date" : (type || "text");
+      if(type === "number"){
+        input.inputMode = "decimal";
+        input.step = "0.1";
+        input.value = (dataObj[key] ?? "") === null ? "" : (dataObj[key] ?? "");
+      }else{
+        input.value = dataObj[key] ?? "";
+      }
+    }
+    input.dataset.infokey = key;
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  function addRow(cols, blocks){
+    const r = document.createElement("div");
+    r.className = `row cols-${cols}`;
+    blocks.forEach(b=>r.appendChild(b));
+    form.appendChild(r);
+  }
+
+  addRow(2, [inputBlock(fields[0], p.info), inputBlock(fields[1], p.info)]);
+  addRow(3, [inputBlock(fields[2], p.info), inputBlock(fields[7], p.info), inputBlock(fields[8], p.info)]);
+  addRow(2, [inputBlock(fields[3], p.info), inputBlock(fields[4], p.info)]);
+  addRow(2, [inputBlock(fields[5], p.info), inputBlock(fields[6], p.info)]);
+  addRow(2, [inputBlock(fields[9], p.info), inputBlock(fields[10], p.info)]);
+  addRow(3, [inputBlock(fields[11], p.info), inputBlock(fields[12], p.info), inputBlock(fields[13], p.info)]);
+  addRow(1, [inputBlock(fields[14], p.info)]);
+
+  el("btnAddOrUpdate").innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salva info`;
+  el("btnCancelEdit").classList.add("hidden");
+  el("btnExportSectionExcel").classList.add("hidden");
+
+  el("tableHeadRow").innerHTML = "";
+  el("tableBody").innerHTML = "";
+  document.querySelector("#view-section .card:nth-child(2)").classList.add("hidden");
+
+  el("btnAddOrUpdate").onclick = ()=>{
+    fields.forEach(f=>{
+      const [_, key, type] = f;
+      const input = document.querySelector(`[data-infokey="${key}"]`);
+      if(!input) return;
+      if(type === "checkbox") p.info[key] = input.checked;
+      else if(type === "number") p.info[key] = input.value==="" ? null : Number(input.value);
+      else p.info[key] = input.value;
+    });
+    touchProject(p);
+    persist();
+    renderSaveStatus();
+    toast("Info salvate");
+  };
+}
+
+/* =========================
+   SECTION VIEW (records)
+========================= */
+let currentSectionRoute = null;
+let editingId = null;
+
+function openSection(route){
+  currentSectionRoute = route;
+  editingId = null;
+
+  el("view-home").classList.add("hidden");
+  el("view-section").classList.remove("hidden");
+  document.querySelector("#view-section .card:nth-child(2)").classList.remove("hidden");
+  el("btnExportSectionExcel").classList.remove("hidden");
+
+  const p = getActiveProject();
+  const def = SECTIONS[route];
+  el("appSubtitle").textContent = def.label;
+  el("sectionTitle").innerHTML = `<i class="fa-solid ${def.icon}"></i> ${def.label}`;
+  el("sectionHint").textContent = "Compila i campi, premi Conferma: il record si aggiunge alla tabella.";
+
+  buildSectionForm(def);
+
+  el("btnAddOrUpdate").innerHTML = `<i class="fa-solid fa-check"></i> Conferma`;
+  el("btnCancelEdit").classList.add("hidden");
+  el("btnAddOrUpdate").onclick = ()=> onConfirmRecord();
+  el("btnCancelEdit").onclick = ()=> resetForm();
+  el("btnExportSectionExcel").onclick = ()=> exportSectionExcel(route);
+
+  renderSectionTable(route);
+}
+
+function fieldBlock(f){
+  const block = document.createElement("div");
+  const lab = document.createElement("label");
+  lab.textContent = f.label;
+  block.appendChild(lab);
+
+  let input;
+  if(f.type === "select"){
+    input = document.createElement("select");
+    const opt0 = document.createElement("option");
+    opt0.value = ""; opt0.textContent = "—";
+    input.appendChild(opt0);
+    f.options.forEach(o=>{
+      const opt = document.createElement("option");
+      opt.value = o; opt.textContent = o;
+      input.appendChild(opt);
+    });
+  }else if(f.type === "number"){
+    input = document.createElement("input");
+    input.type = "number";
+    input.inputMode = "decimal";
+    input.step = f.step || "1";
+  }else{
+    input = document.createElement("input");
+    input.type = "text";
+  }
+  input.dataset.field = f.id;
+  block.appendChild(input);
+  return block;
+}
+
+function buildSectionForm(def){
+  const form = el("sectionForm");
+  form.innerHTML = "";
+  for(let i=0;i<def.fields.length;i+=2){
+    const r = document.createElement("div");
+    r.className = "row cols-2";
+    r.appendChild(fieldBlock(def.fields[i]));
+    if(def.fields[i+1]) r.appendChild(fieldBlock(def.fields[i+1]));
+    form.appendChild(r);
+  }
+}
+
+function readFormValues(route){
+  const def = SECTIONS[route];
+  const obj = {};
+  def.fields.forEach(f=>{
+    const input = document.querySelector(`[data-field="${f.id}"]`);
+    if(!input) return;
+    if(f.type === "number"){
+      obj[f.id] = input.value === "" ? null : Number(input.value);
+    }else{
+      obj[f.id] = input.value;
+    }
+  });
+  return obj;
+}
+
+function fillFormValues(route, data){
+  const def = SECTIONS[route];
+  def.fields.forEach(f=>{
+    const input = document.querySelector(`[data-field="${f.id}"]`);
+    if(!input) return;
+    const v = data[f.id];
+    input.value = (v === null || v === undefined) ? "" : v;
+  });
+}
+
+function resetForm(){
+  editingId = null;
+  fillFormValues(currentSectionRoute, {});
+  el("btnAddOrUpdate").innerHTML = `<i class="fa-solid fa-check"></i> Conferma`;
+  el("btnCancelEdit").classList.add("hidden");
+  toast("Modifica annullata");
+}
+
+function onConfirmRecord(){
+  const p = getActiveProject();
+  const route = currentSectionRoute;
+  const def = SECTIONS[route];
+
+  const values = readFormValues(route);
+  const arr = p.data[def.key];
+
+  if(editingId){
+    const idx = arr.findIndex(r=>r._id === editingId);
+    if(idx >= 0){
+      arr[idx] = { ...arr[idx], ...values };
+      touchProject(p);
+      persist();
+      renderSectionTable(route);
+      resetForm();
+      toast("Record aggiornato");
+      return;
+    }
+  }
+
+  const rec = { _id: uuid(), ...values, _createdAt: new Date().toISOString() };
+  arr.push(rec);
+  touchProject(p);
+  persist();
+  renderSectionTable(route);
+  fillFormValues(route, {});
+  toast("Record aggiunto");
+}
+
+function renderSectionTable(route){
+  renderSaveStatus();
+
+  const p = getActiveProject();
+  const def = SECTIONS[route];
+  const arr = p.data[def.key];
+
+  const headRow = el("tableHeadRow");
+  headRow.innerHTML = "";
+  def.fields.forEach(f=>{
+    const th = document.createElement("th");
+    th.textContent = f.label;
+    headRow.appendChild(th);
+  });
+  const thA = document.createElement("th");
+  thA.textContent = "Azioni";
+  headRow.appendChild(thA);
+
+  const body = el("tableBody");
+  body.innerHTML = "";
+
+  arr.forEach(rec=>{
+    const tr = document.createElement("tr");
+    def.fields.forEach(f=>{
+      const td = document.createElement("td");
+      const v = rec[f.id];
+      td.textContent = (v === null || v === undefined || v === "") ? "—" : String(v);
+      tr.appendChild(td);
+    });
+
+    const tdA = document.createElement("td");
+    tdA.className = "t-actions";
+
+    const btnE = document.createElement("button");
+    btnE.className = "ghost";
+    btnE.innerHTML = `<i class="fa-solid fa-pen"></i> Modifica`;
+    btnE.onclick = ()=>{
+      editingId = rec._id;
+      fillFormValues(route, rec);
+      el("btnAddOrUpdate").innerHTML = `<i class="fa-solid fa-rotate-right"></i> Aggiorna`;
+      el("btnCancelEdit").classList.remove("hidden");
+      toast("Modalità modifica");
+    };
+
+    const btnD = document.createElement("button");
+    btnD.className = "ghost";
+    btnD.innerHTML = `<i class="fa-solid fa-copy"></i> Duplica`;
+    btnD.onclick = ()=>{
+      const copy = { ...rec, _id: uuid(), _createdAt: new Date().toISOString() };
+      arr.push(copy);
+      touchProject(p);
+      persist();
+      renderSectionTable(route);
+      toast("Record duplicato");
+    };
+
+    const btnX = document.createElement("button");
+    btnX.className = "ghost";
+    btnX.style.color = "var(--danger)";
+    btnX.innerHTML = `<i class="fa-solid fa-trash"></i> Elimina`;
+    btnX.onclick = ()=>{
+      if(!confirm("Eliminare questo record?")) return;
+      p.data[def.key] = arr.filter(r=>r._id !== rec._id);
+      touchProject(p);
+      persist();
+      renderSectionTable(route);
+      toast("Record eliminato");
+    };
+
+    tdA.appendChild(btnE);
+    tdA.appendChild(btnD);
+    tdA.appendChild(btnX);
+    tr.appendChild(tdA);
+    body.appendChild(tr);
+  });
+}
+
+/* =========================
+   EXPORTS
+========================= */
+function downloadBlob(filename, blob){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+}
+
+function safeFileName(s){
+  return (s || "progetto")
+    .toString()
+    .trim()
+    .replace(/[^\w\-]+/g, "_")
+    .slice(0, 60) || "progetto";
+}
+
+function exportProjectJSON(){
+  const p = getActiveProject();
+  if(!p){ toast("Nessun progetto selezionato"); return; }
+  const name = safeFileName(p.info.ragioneSociale);
+  const blob = new Blob([JSON.stringify(p, null, 2)], {type:"application/json"});
+  downloadBlob(`${name}_diagnosi.json`, blob);
+  toast("JSON esportato");
+}
+
+function exportSectionExcel(route){
+  const p = getActiveProject();
+  if(!p){ toast("Nessun progetto selezionato"); return; }
+  const def = SECTIONS[route];
+  const data = (p.data[def.key] || []).map(r=>{
+    const row = {};
+    def.fields.forEach(f=> row[f.label] = (r[f.id] ?? ""));
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, def.label.slice(0,31));
+  const name = safeFileName(p.info.ragioneSociale);
+  XLSX.writeFile(wb, `${name}_${def.key}.xlsx`);
+  toast("Excel sezione esportato");
+}
+
+function exportAllExcel(){
+  const p = getActiveProject();
+  if(!p){ toast("Nessun progetto selezionato"); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  const infoRows = [
+    { Campo:"Ragione Sociale", Valore: p.info.ragioneSociale || "" },
+    { Campo:"Indirizzo sito", Valore: p.info.indirizzo || "" },
+    { Campo:"Data sopralluogo", Valore: p.info.dataSopralluogo || "" },
+    { Campo:"Meteo", Valore: p.info.meteo || "" },
+    { Campo:"Temperatura esterna (°C)", Valore: p.info.tempEsterna ?? "" },
+    { Campo:"Superficie totale (mq)", Valore: p.info.superficieMq ?? "" },
+    { Campo:"Referente 1", Valore: `${p.info.referente1_nome || ""} (${p.info.referente1_qualifica || ""})`.trim() },
+    { Campo:"Referente 2", Valore: `${p.info.referente2_nome || ""} (${p.info.referente2_qualifica || ""})`.trim() },
+    { Campo:"Planimetria", Valore: p.info.planimetria ? "Sì" : "No" },
+    { Campo:"Consumi", Valore: p.info.consumi ? "Sì" : "No" },
+    { Campo:"Ciclo produttivo", Valore: p.info.cicloProduttivo ? "Sì" : "No" },
+    { Campo:"Note", Valore: p.info.note || "" },
+  ];
+  const wsInfo = XLSX.utils.json_to_sheet(infoRows);
+  XLSX.utils.book_append_sheet(wb, wsInfo, "Info Progetto");
+
+  Object.keys(SECTIONS).forEach(route=>{
+    const def = SECTIONS[route];
+    const rows = (p.data[def.key] || []).map(r=>{
+      const obj = {};
+      def.fields.forEach(f=> obj[f.label] = (r[f.id] ?? ""));
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, def.label.slice(0,31));
+  });
+
+  const name = safeFileName(p.info.ragioneSociale);
+  XLSX.writeFile(wb, `${name}_diagnosi_completa.xlsx`);
+  toast("Excel completo esportato");
+}
+
+/* =========================
+   IMPORT JSON (NEW)
+   - Importa SEMPRE come nuovo progetto (no overwrite)
+========================= */
+function normalizeImportedProject(raw){
+  const p = emptyProject();
+
+  // se possibile porta dentro info + data
+  if(raw && typeof raw === "object"){
+    if(raw.info && typeof raw.info === "object"){
+      p.info = { ...p.info, ...raw.info };
+    }
+    if(raw.data && typeof raw.data === "object"){
+      p.data = { ...p.data, ...raw.data };
+    }
+  }
+
+  // garantisci tutte le sezioni
+  const keys = Object.values(SECTIONS).map(s => s.key);
+  keys.forEach(k=>{
+    if(!Array.isArray(p.data[k])) p.data[k] = [];
+    // pulizia minima: assicura _id su record importati
+    p.data[k] = p.data[k].map(r=>{
+      if(r && typeof r === "object"){
+        return { _id: r._id || uuid(), ...r };
+      }
+      return { _id: uuid() };
+    });
+  });
+
+  // sempre nuovo id e timestamp
+  p.id = uuid();
+  p.createdAt = new Date().toISOString();
+  p.updatedAt = new Date().toISOString();
+  return p;
+}
+
+function importProjectFromFile(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const raw = JSON.parse(reader.result);
+      const imported = normalizeImportedProject(raw);
+
+      // se manca ragione sociale, metti un placeholder
+      if(!imported.info.ragioneSociale){
+        imported.info.ragioneSociale = "Progetto importato";
+      }
+
+      state.projects.push(imported);
+      state.activeProjectId = imported.id;
+      persist();
+      renderHome();
+      toast("Progetto importato");
+    }catch(e){
+      console.error(e);
+      toast("Import fallito: JSON non valido");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* =========================
+   AUTOSAVE + PERSIST
+========================= */
+let autosaveTimer = null;
+
+function persist(){
+  saveState(state);
+  renderSaveStatus();
+}
+
+function startAutosave(){
+  if(autosaveTimer) clearInterval(autosaveTimer);
+  autosaveTimer = setInterval(()=>{
+    if(getActiveProject()){
+      persist();
+      toast("Autosalvataggio");
+    }
+  }, AUTOSAVE_MS);
+}
+
+function wireAutosaveOnChange(){
+  let t = null;
+  document.addEventListener("input", ()=>{
+    clearTimeout(t);
+    t = setTimeout(()=> {
+      if(getActiveProject()){
+        persist();
+      }
+    }, 600);
+  });
+}
+
+/* =========================
+   WIRING
+========================= */
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=> setRoute(btn.dataset.route));
+});
+
+// Home buttons
+el("btnNewProject").onclick = ()=> openNewProjectForm(true);
+el("btnCancelNewProject").onclick = ()=> openNewProjectForm(false);
+
+el("btnSaveNewProject").onclick = ()=>{
+  const p = readNewProjectForm();
+  if(!p.info.ragioneSociale){
+    toast("Inserisci almeno la Ragione Sociale");
+    return;
+  }
+  state.projects.push(p);
+  state.activeProjectId = p.id;
+  persist();
+  openNewProjectForm(false);
+  renderHome();
+  toast("Progetto creato");
+};
+
+// NEW: Save now
+el("btnSaveNow").onclick = ()=>{
+  persist();
+  toast("Salvato");
+};
+
+// Export buttons
+el("btnExportProjectJSON").onclick = exportProjectJSON;
+el("btnExportAllExcel").onclick = exportAllExcel;
+
+// NEW: Import JSON
+el("btnImportProjectJSON").onclick = ()=>{
+  el("fileImportJSON").value = "";
+  el("fileImportJSON").click();
+};
+el("fileImportJSON").addEventListener("change", (ev)=>{
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  importProjectFromFile(file);
+});
+
+// Initial render
+renderHome();
+renderSaveStatus();
+startAutosave();
+wireAutosaveOnChange();
+  // Toggle bottom nav (show/hide)
+const btnToggleNav = document.getElementById("btnToggleNav");
+const bottomNav = document.querySelector(".bottom-nav");
+
+btnToggleNav.addEventListener("click", ()=>{
+  bottomNav.classList.toggle("is-hidden");
+});
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
